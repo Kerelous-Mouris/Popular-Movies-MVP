@@ -35,4 +35,10 @@ public class DetailedActivity extends AppCompatActivity {
         textView.setText(intent.getStringExtra("description"));
         Picasso.get().load(editedImagePath).into(imageView);
     }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }

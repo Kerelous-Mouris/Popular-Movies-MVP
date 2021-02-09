@@ -2,6 +2,7 @@ package com.example.popularmovies.ui;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +14,10 @@ import com.example.popularmovies.pojo.HttpRequest;
 import com.example.popularmovies.pojo.MoviesJsonData;
 import com.example.popularmovies.pojo.NetworkUtils;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.URL;
 
 public class MoviePresenter implements LoaderManager.LoaderCallbacks<String[]> {
@@ -63,19 +68,25 @@ public class MoviePresenter implements LoaderManager.LoaderCallbacks<String[]> {
 
                 URL moviesRequestUrl = NetworkUtils.buildUrl(uri);
 
-                try {
-                    String jsonMoviesResponse = HttpRequest.request(moviesRequestUrl);
-                    String[] simpleJsonMoviesData = MoviesJsonData.getSimpleStringfromJSON(context, jsonMoviesResponse);
-                    mSrc = MoviesJsonData.getImageAddress(context, jsonMoviesResponse);
-                    overView = MoviesJsonData.getMoviesOverview(context, jsonMoviesResponse);
+                if (isOnline()) {
+                    try {
+                        String jsonMoviesResponse = HttpRequest.request(moviesRequestUrl);
+                        String[] simpleJsonMoviesData = MoviesJsonData.getSimpleStringfromJSON(context, jsonMoviesResponse);
+                        mSrc = MoviesJsonData.getImageAddress(context, jsonMoviesResponse);
+                        overView = MoviesJsonData.getMoviesOverview(context, jsonMoviesResponse);
 
-                    return simpleJsonMoviesData;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return null;
+                        return simpleJsonMoviesData;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return null;
+                    }
                 }
-            }
 
+            else{
+                    //Toast.makeText(context,"There is no internet connection",Toast.LENGTH_LONG).show();
+                    return null;
+            }
+        }
             @Override
             protected void onStartLoading() {
                 if (args == null)
@@ -92,6 +103,8 @@ public class MoviePresenter implements LoaderManager.LoaderCallbacks<String[]> {
 
         if (data != null)
             view.onDataRetrieved(data.length,data,mSrc,overView);
+        else
+            view.showErrorImage(true);
 
 
     }
@@ -101,5 +114,17 @@ public class MoviePresenter implements LoaderManager.LoaderCallbacks<String[]> {
 
     }
 
+    public boolean isOnline() {
+        try {
+            int timeoutMs = 1500;
+            Socket sock = new Socket();
+            SocketAddress sockaddr = new InetSocketAddress("8.8.8.8", 53);
+
+            sock.connect(sockaddr, timeoutMs);
+            sock.close();
+
+            return true;
+        } catch (IOException e) { return false; }
+    }
 
 }
